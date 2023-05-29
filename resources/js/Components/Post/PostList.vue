@@ -1,10 +1,21 @@
 <script setup>
 import Comment from "@/Components/Icons/Comment.vue";
 import Like from "@/Components/Icons/Like.vue";
+import { useForm } from "@inertiajs/vue3";
 
 const props = defineProps({
-  posts: Array,
+  posts: Object,
 });
+
+defineEmits(["openModal"]);
+
+const form = useForm({});
+
+const submit = () => {
+  form.get(route("post.like", props.posts.title), {
+    onFinish: () => form.reset(),
+  });
+};
 </script>
 
 <template>
@@ -27,30 +38,36 @@ const props = defineProps({
       </svg>
     </span>
     <h3
-      class="flex items-center mb-1 text-lg font-semibold text-gray-900 dark:text-white"
+      class="flex items-center mb-1 capitalize text-lg font-semibold text-gray-900 dark:text-white"
     >
-      Flowbite Application UI v2.0.0
+      {{ props.posts.title }}
       <span
         class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 ml-3"
-        >Latest</span
-      >
+        v-text="props.posts.user"
+      ></span>
     </h3>
     <time
       class="block mb-2 text-sm font-normal leading-none text-gray-400 dark:text-gray-500"
-      >Released on January 13th, 2022</time
+      >Released on {{ props.posts.date }}</time
     >
     <p
       class="text-base font-normal text-gray-500 dark:text-gray-400"
       v-text="props.posts.message"
     ></p>
-    <div class="inline-flex items-center gap-1 text-sm">
+    <div
+      @click="$emit('openModal')"
+      class="inline-flex cursor-pointer items-center gap-1 text-sm"
+    >
       <Comment />
-      <span class="font-bold">01</span>
+      <span class="font-bold" v-text="props.posts.comments"></span>
     </div>
 
-    <div class="inline-flex items-center gap-1 text-sm ml-2">
-      <Like />
-      <span class="font-bold">01</span>
+    <div
+      @click="submit"
+      class="inline-flex cursor-pointer items-center gap-1 text-sm ml-2"
+    >
+      <Like :class="{ 'fill-sky-500': props.posts.isLiked }" />
+      <span class="font-bold" v-text="props.posts.likes"></span>
     </div>
   </li>
 </template>

@@ -11,6 +11,13 @@ class Like extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['user_id', 'post_id'];
+
+    /**
      * Get the user that owns the Like
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

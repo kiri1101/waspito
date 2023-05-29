@@ -1,38 +1,45 @@
 <script setup>
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import Modal from "@/Components/Modal.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import TextInput from "@/Components/TextInput.vue";
+import InputLabel from "@/Components/InputLabel.vue";
+import InputError from "@/Components/InputError.vue";
+import PostForm from "@/Components/Form/PostForm.vue";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm } from "@inertiajs/vue3";
 import PostList from "@/Components/Post/PostList.vue";
 import EmptyBox from "@/Components/Icons/EmptyBox.vue";
-import InputError from "@/Components/InputError.vue";
-import InputLabel from "@/Components/InputLabel.vue";
-import TextInput from "@/Components/TextInput.vue";
-import { computed, onMounted, ref } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps({
   posts: Object,
 });
 
-onMounted(() => {
-  list.value = props.posts;
-});
+const isPosts = computed(() => (Object.keys(props.posts).length > 0 ? true : false));
 
-const list = ref([]);
+const openCommentModal = ref(false);
 
 const form = useForm({
-  title: "",
-  message: "",
+  comment: "",
 });
 
-const submit = () => {
-  list.value.push(form.message);
+const openingModal = () => {
+  openCommentModal.value = true;
+};
 
-  form.post(route("post.store"), {
-    onFinish: () => form.reset("password"),
+const submit = () => {
+  form.post(route("profile.destroy"), {
+    preserveScroll: true,
+    onSuccess: () => closeModal(),
+    onFinish: () => form.reset(),
   });
 };
 
-const isPosts = computed(() => (list.value.length > 0 ? true : false));
+const closeModal = () => {
+  openCommentModal.value = false;
+
+  form.reset();
+};
 </script>
 
 <template>
@@ -50,50 +57,7 @@ const isPosts = computed(() => (list.value.length > 0 ? true : false));
             Create a post
           </div>
 
-          <form @submit.prevent="submit" class="px-3 sm:px-6 lg:px-8">
-            <div>
-              <InputLabel
-                for="title"
-                value="Title"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              />
-
-              <TextInput
-                id="title"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="form.title"
-                required
-                autofocus
-                autocomplete="username"
-              />
-
-              <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <label
-              for="message"
-              class="block my-2 text-sm font-medium text-gray-900 dark:text-white"
-              >Your message</label
-            >
-            <textarea
-              id="message"
-              v-model="form.message"
-              rows="5"
-              class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Leave a comment..."
-            ></textarea>
-
-            <div class="flex items-center justify-end mt-4">
-              <PrimaryButton
-                class="ml-4 mb-2"
-                :class="{ 'opacity-25': form.processing }"
-                :disabled="form.processing"
-              >
-                Post
-              </PrimaryButton>
-            </div>
-          </form>
+          <PostForm />
         </div>
       </div>
     </div>
@@ -104,7 +68,12 @@ const isPosts = computed(() => (list.value.length > 0 ? true : false));
           <div class="p-6">
             <template v-if="isPosts">
               <ol class="relative border-l border-gray-200 dark:border-gray-700">
-                <PostList />
+                <PostList
+                  @open-modal="openingModal"
+                  v-for="(post, index) in props.posts"
+                  :key="index"
+                  :posts="post"
+                />
               </ol>
             </template>
 
@@ -119,5 +88,46 @@ const isPosts = computed(() => (list.value.length > 0 ? true : false));
         </div>
       </div>
     </div>
+
+    <Modal :show="openCommentModal" @close="closeModal">
+      <div class="p-6">
+        <h2 class="text-lg font-medium text-gray-900">
+          Are you sure you want to delete your account?
+        </h2>
+
+        <p class="mt-1 text-sm text-gray-600">
+          Once your account is deleted, all of its resources and data will be permanently
+          deleted. Please enter your password to confirm you would like to permanently
+          delete your account.
+        </p>
+
+        <div class="mt-6">
+          <InputLabel for="comment" value="Comment" class="sr-only" />
+
+          <TextInput
+            id="comment"
+            ref="commentInput"
+            v-model="form.comment"
+            type="text"
+            class="mt-1 block w-3/4"
+            placeholder="Enter a comment"
+            @keyup.enter="submit"
+          />
+
+          <InputError :message="form.errors.comment" class="mt-2" />
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <PrimaryButton
+            class="ml-3"
+            :class="{ 'opacity-25': form.processing }"
+            :disabled="form.processing"
+            @click="submit"
+          >
+            Delete Account
+          </PrimaryButton>
+        </div>
+      </div>
+    </Modal>
   </AuthenticatedLayout>
 </template>

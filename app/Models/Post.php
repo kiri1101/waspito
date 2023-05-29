@@ -30,6 +30,16 @@ class Post extends Model
     }
 
     /**
+     * Get all of the comments for the Post
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
      * Get all of the likes for the Post
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

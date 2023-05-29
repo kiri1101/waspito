@@ -27,15 +27,26 @@ Route::get('/', function () {
     ]);
 });
 
-Route::prefix('post')->group(function () {
+Route::prefix('posts')->group(function () {
     Route::controller(PostController::class)->group(function () {
         Route::post('/store', 'storePost')->name('post.store');
+        Route::get('/{post:title}/like', 'likePost')->name('post.like');
     });
 });
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard', [
-        "posts" => Post::all()
+        "posts" => Post::all()->map(fn($post) => [
+            "user" => $post->user->name,
+            "title" => $post->title,
+            "message" => $post->message,
+            "date" => now()->toFormattedDateString(),
+            "comments" => count($post->comments) > 0 ? count($post->comments) : 0,
+            "likes" => count($post->likes) ? count($post->likes) : 0,
+            "isLiked" => $post->likes->contains(function (object $like, int $key) {
+                return $like->user_id === auth()->user()->id;
+            })
+        ]),
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
